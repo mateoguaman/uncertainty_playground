@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import wandb
 from collections import OrderedDict
-import imageio
+import imageio.v2 as imageio
 
 USE_WANDB = True
 
@@ -103,22 +103,28 @@ def get_test_metrics(model, test_dataloader, epoch):
 
 def main(train_dir, test_dir, batch_size, lr, num_epochs, mlp_size=32, save_img_interval=10, run=0):
 
+    # Set all filepaths
     train_inputs_fp = os.path.join(train_dir, "inputs.npy")
     test_inputs_fp = os.path.join(test_dir, "inputs.npy")
     train_labels_fp = os.path.join(train_dir, "labels.npy")
     test_labels_fp = os.path.join(test_dir, "labels.npy")
 
+    # Define datasets
     train_dataset = ToyDataset(train_inputs_fp, train_labels_fp)
     test_dataset  = ToyDataset(test_inputs_fp, test_labels_fp)
 
+    # Load data
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
+    # Define model
     model = Network(mlp_size=mlp_size)
     model.cuda()
 
+    # Pick type of optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
+    # Set up data visualization
     if USE_WANDB:
         config = {
             'mlp_size': mlp_size,
@@ -127,10 +133,11 @@ def main(train_dir, test_dir, batch_size, lr, num_epochs, mlp_size=32, save_img_
         wandb.init(project="MLP", reinit=True, config=config)
 
     image_filenames = []
-    images_dir = os.path.join("/home/mateo/Learning/mlp/viz", f"imbalanced_mlp{mlp_size}_lr{lr}_run{run}")
+    images_dir = os.path.join("/home/micah/airlab/uncertainty_playground/mlp/viz", f"imbalanced_mlp{mlp_size}_lr{lr}_run{run}")
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)
 
+    # begin training epoch
     for epoch in range(num_epochs):
         train_metrics, all_inputs_train, all_labels_train = run_train_epoch(model, train_dataloader, optimizer, epoch)
         test_metrics, all_inputs, all_outputs, all_labels = get_test_metrics(model, test_dataloader, epoch)
@@ -141,6 +148,7 @@ def main(train_dir, test_dir, batch_size, lr, num_epochs, mlp_size=32, save_img_
         print(f"Test metrics: ")
         print(test_metrics)
 
+        # Record image of current regression
         if epoch % save_img_interval == 0:
             plt.plot(np.sort(all_inputs), all_labels[np.argsort(all_inputs)], c='red', label="GT Function")
             plt.scatter(all_inputs, all_outputs, c='blue', alpha=0.5, label="Predicted function")
@@ -155,6 +163,7 @@ def main(train_dir, test_dir, batch_size, lr, num_epochs, mlp_size=32, save_img_
             plt.savefig(filename, dpi=300, bbox_inches="tight")
             plt.close()
 
+        # wandb logging
         train_metrics = {"train/"+k:v for k,v in train_metrics.items()}
         test_metrics = {"test/"+k:v for k,v in test_metrics.items()}
         wandb.log(data=train_metrics, step=epoch)
@@ -175,12 +184,12 @@ def main(train_dir, test_dir, batch_size, lr, num_epochs, mlp_size=32, save_img_
 
 
 if __name__=="__main__":
-    train_dir = "/home/mateo/Learning/mlp/data/imbalanced"
-    test_dir = "/home/mateo/Learning/mlp/data/ground_truth"
-    batch_size = 100
-    lr = 7e-4
-    num_epochs = 5000
-    mlp_size = 32
+    train_dir = "/home/micah/airlab/uncertainty_playground/mlp/data/imbalanced"
+    test_dir = "/home/micah/airlab/uncertainty_playground/mlp/data/ground_truth"
+    batch_size = 100 # number of samples during each pass
+    lr = 7e-4 # no idea
+    num_epochs = 5000 # number of passes
+    mlp_size = 32 # size of perceptron
     save_img_interval = 50
     # run = 0
 

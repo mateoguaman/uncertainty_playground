@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import wandb
 from collections import OrderedDict
-import imageio
+import imageio.v2 as imageio
 
 USE_WANDB = True
 
@@ -56,7 +56,7 @@ class Network(nn.Module):
         )
         self.ensemble = nn.ModuleList(EnsembleHead(mlp_size) for k in range(num_heads))
 
-    
+    # bagging?
     def forward(self, input_data):
         backbone_output = self.model(input_data)
         outputs = []
@@ -86,7 +86,7 @@ def run_train_epoch(model, train_dataloader, optimizer, epoch):
         #     loss.backward()
         #     optimizers[k].step()
         # avg_loss = torch.mean(torch.Tensor(losses))
-
+        
         total_loss = 0
         optimizer.zero_grad()
         for k, loss in enumerate(losses):
@@ -121,7 +121,7 @@ def get_test_metrics(model, test_dataloader, epoch):
             output = model(input)
 
             losses = [criterion(output[k], label) for k in range(len(output))]
-            avg_loss = torch.mean(torch.Tensor(losses))
+            avg_loss = torch.mean(torch.Tensor(losses))/num_heads
 
             # import pdb;pdb.set_trace()
 
@@ -158,7 +158,7 @@ def main(train_dir, test_dir, batch_size, lr, num_epochs, num_heads=32, mlp_size
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     model = Network(mlp_size=mlp_size, num_heads=num_heads)
-    import pdb;pdb.set_trace()
+    # import pdb;pdb.set_trace()
     model.cuda()
 
     # optimizers = [optim.Adam(model.parameters(), lr=lr) for _ in range(num_heads)]
@@ -169,10 +169,10 @@ def main(train_dir, test_dir, batch_size, lr, num_epochs, num_heads=32, mlp_size
             'mlp_size': mlp_size,
             'lr': lr
         }
-        wandb.init(project="MLP", reinit=True, config=config)
+        wandb.init(project="MLP", group="ensemble", name=f"imbalanced_ensemble_mlp{mlp_size}_lr{lr}_run{run}", reinit=True, config=config)
 
     image_filenames = []
-    images_dir = os.path.join("/home/mateo/Learning/mlp/viz", f"imbalanced_ensemble_mlp{mlp_size}_lr{lr}_run{run}")
+    images_dir = os.path.join("/home/micah/airlab/uncertainty_playground/mlp/viz", f"imbalanced_ensemble_mlp{mlp_size}_lr{lr}_run{run}")
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)
 
@@ -227,17 +227,17 @@ def main(train_dir, test_dir, batch_size, lr, num_epochs, num_heads=32, mlp_size
 
 
 if __name__=="__main__":
-    train_dir = "/home/mateo/Learning/mlp/data/imbalanced"
-    test_dir = "/home/mateo/Learning/mlp/data/ground_truth"
+    train_dir = "/home/micah/airlab/uncertainty_playground/mlp/data/imbalanced"
+    test_dir = "/home/micah/airlab/uncertainty_playground/mlp/data/ground_truth"
     batch_size = 100
     lr = 7e-4
     num_epochs = 15000
     mlp_size = 32
     save_img_interval = 50
     num_heads=32
-    # run = 4
+    run = 1
 
-    # main(train_dir, test_dir, batch_size, lr, num_epochs, num_heads=num_heads, mlp_size=mlp_size, save_img_interval=save_img_interval, run=run)
+    main(train_dir, test_dir, batch_size, lr, num_epochs, num_heads=num_heads, mlp_size=mlp_size, save_img_interval=save_img_interval, run=run)
 
-    for run in range(5,10):
-        main(train_dir, test_dir, batch_size, lr, num_epochs, num_heads=num_heads, mlp_size=mlp_size, save_img_interval=save_img_interval, run=run)
+    # for run in range(5,10):
+    #     main(train_dir, test_dir, batch_size, lr, num_epochs, num_heads=num_heads, mlp_size=mlp_size, save_img_interval=save_img_interval, run=run)

@@ -60,7 +60,7 @@ def create_dataset(save_dir):
 
 
 if __name__ == "__main__":
-    save_dir = "/home/mateo/Learning/mlp/data"
+    save_dir = "/home/micah/airlab/uncertainty_playground/mlp/data"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 

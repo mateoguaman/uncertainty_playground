@@ -1,2 +1,4 @@
-from .layers import *
-from .losses import *
+from .pylayers import *
+from .pylosses import *
+from .tflayers import *
+from .tflosses import *

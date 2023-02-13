@@ -57,7 +57,7 @@ class Network(nn.Module):
             # nn.Linear(in_features=mlp_size, out_features=2),
 
             # Make evidential distribution         
-            edl.layers.DenseNormalGamma(mlp_size, 1),
+            edl.pylayers.DenseNormalGamma(mlp_size, 1),
         )
     
     # Forward pass through network
@@ -67,7 +67,7 @@ class Network(nn.Module):
         return out
 
 def EvidentialRegressionLoss(true, pred):
-    return edl.losses.EvidentialRegression(true, pred, coeff=1e-2)
+    return edl.pylosses.EvidentialRegression(true, pred, coeff=1e-2)
 
 def run_train_epoch(model, train_dataloader, optimizer, epoch):
     model.train()

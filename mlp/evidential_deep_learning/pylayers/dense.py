@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-
 # class DenseNormal(Layer):
 #     def __init__(self, units):
 #         super(DenseNormal, self).__init__()
@@ -22,27 +21,27 @@ import torch.nn as nn
 #         return base_config
 
 # Very unsure about if this is implemented right
-class DenseNormalGamma(nn.Module):
-    def __init__(self, size_in, size_out):#, **kwargs):
-        super(DenseNormalGamma, self).__init__()
-        self.size_in, self.size_out = size_in, size_out
+# class DenseNormalGamma(nn.Module):
+#     def __init__(self, size_in, size_out):#, **kwargs):
+#         super(DenseNormalGamma, self).__init__()
+#         self.size_in, self.size_out = size_in, size_out
 
-        # Switch Dense fxn (tf) for Linear (torch)
-        self.fc = torch.nn.Linear(size_in, 4 * size_out) # https://stackoverflow.com/questions/66626700/difference-between-tensorflows-tf-keras-layers-dense-and-pytorchs-torch-nn-lin
+#         # Switch Dense fxn (tf) for Linear (torch)
+#         self.fc = torch.nn.Linear(size_in, 4 * size_out) # https://stackoverflow.com/questions/66626700/difference-between-tensorflows-tf-keras-layers-dense-and-pytorchs-torch-nn-lin
 
-    def evidence(self, x):
-        return nn.functional.softplus(x)
+#     def evidence(self, x):
+#         return nn.functional.softplus(x)
 
-    def forward(self, x):
-        output = self.fc(x)
-        mu, logv, logalpha, logbeta = torch.split(output, 1, dim=-1) # temp fix setting size of tensors to 1. Make dynamic soln later
-        v = self.evidence(logv)
-        alpha = self.evidence(logalpha) + 1
-        beta = self.evidence(logbeta)
-        return torch.concat([mu, v, alpha, beta], dim=-1)
+#     def forward(self, x):
+#         output = self.fc(x)
+#         mu, logv, logalpha, logbeta = torch.split(output, 1, dim=-1) # temp fix setting size of tensors to 1. Make dynamic soln later
+#         v = self.evidence(logv)
+#         alpha = self.evidence(logalpha) + 1
+#         beta = self.evidence(logbeta)
+#         return torch.concat([mu, v, alpha, beta], dim=-1)
     
-    def compute_output_shape(self, input_shape):
-        return (input_shape[0], 4 * self.size_out)
+#     def compute_output_shape(self, input_shape):
+#         return (input_shape[0], 4 * self.size_out)
 
     # still in tf but not needed 
     # def get_config(self):

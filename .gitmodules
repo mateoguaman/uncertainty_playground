@@ -1,0 +1,3 @@
+[submodule "evidential-deep-learning"]
+	path = evidential-deep-learning
+	url = git@github.com:aamini/evidential-deep-learning.git
